@@ -26,36 +26,53 @@ public class ConsumerController {
         return adminConsumer.getUsers();
     }
 
+
     @RequestMapping(value = "/signup", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public String signup(@RequestBody User user) throws Exception{
-        return adminConsumer.signup(user);
+        try{
+            return adminConsumer.signup(user);
+        }
+        catch (Exception e){
+            String errorResponse = e.getMessage();
+            int index = errorResponse.indexOf("{\"errorCode");
+            System.out.println(e.getMessage());
+            return errorResponse.substring(index, errorResponse.length()-1);
+        }
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    String login(@RequestBody Map<String, Object> map){
+    public String login(@RequestBody Map<String, Object> map){
+
+        try {
+
+            String initial_response = adminConsumer.login(map);
+
+            // if username not found || password is incorrect
+            if (!initial_response.contains("data")) return initial_response;
+
+            // else insert token with the initial response
+            int id_index = initial_response.indexOf("id") + 5;
+            String id = initial_response.substring(id_index,
+                    initial_response.indexOf(",", id_index));
 
 
-        String initial_response =  adminConsumer.login(map);
+            String token = createToken(new ObjectId(id));
 
-//        System.out.println(initial_response);
+            //System.out.println(new ObjectId(id));
 
-        // if email not found || password is incorrect
-        if(!initial_response.contains("data")) return initial_response;
+            StringBuilder response = new StringBuilder(initial_response);
+            int token_index = initial_response.indexOf('}', id_index) - 4;
+            response.insert(token_index, ",\n" + "       token : " + token);
 
-        // else insert token with the initial response
-        int id_index = initial_response.indexOf("id")+5;
-        String id = initial_response.substring(  id_index, initial_response.indexOf(",", id_index));
+            return response.toString();
+        }
+        catch (Exception e){
+            String errorResponse = e.getMessage();
+            int index = errorResponse.indexOf("{\"errorCode");
+            System.out.println(e.getMessage());
+            return errorResponse.substring(index, errorResponse.length()-1);
+        }
 
-
-
-        String token = createToken(new ObjectId(id));
-
-        //System.out.println(new ObjectId(id));
-
-        StringBuilder response = new StringBuilder(initial_response);
-        int token_index = initial_response.indexOf('}', id_index)-4;
-        response.insert(token_index, ",\n"+"       token : "+token);
-        return response.toString();
 
     }
 
