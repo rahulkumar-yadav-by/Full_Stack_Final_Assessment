@@ -29,7 +29,7 @@ public class TokenService {
                     sign(algorithm);
             return token;
 
-        } catch (UnsupportedEncodingException | JWTCreationException e){
+        } catch (JWTCreationException e){
             e.printStackTrace();
         }
         return null;
@@ -45,7 +45,7 @@ public class TokenService {
 
             return decodedJWT.getClaim("userId").asString();
 
-        } catch (UnsupportedEncodingException | JWTCreationException e){
+        } catch (JWTCreationException e){
             e.printStackTrace();
         }
         return null;
